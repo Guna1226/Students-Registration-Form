@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Details</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-r from-blue-100 to-green-100 min-h-screen">
+
+  <div class="max-w-6xl mx-auto py-10 px-4">
+    <h1 class="text-3xl font-bold text-blue-800 text-center mb-6">📚 Student Details</h1>
+
+    <!-- Search Input -->
+    <input type="text" id="searchInput" placeholder="Search by name, course, gender, or DOB..."
+      class="w-full p-2 mb-6 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400">
+
+    <!-- Form Section -->
+    <div class="bg-white p-6 rounded-xl shadow-md mb-6">
+      <form id="studentForm" class="grid sm:grid-cols-2 gap-6" enctype="multipart/form-data">
+        <div>
+          <label for="name" class="block font-medium mb-1">Full Name</label>
+          <input type="text" id="name" required placeholder="Enter full name"
+            class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+        <div>
+          <label for="age" class="block font-medium mb-1">Age</label>
+          <input type="number" id="age" required placeholder="Enter age"
+            class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+        <div>
+          <label for="email" class="block font-medium mb-1">Email</label>
+          <input type="email" id="email" required placeholder="Enter email"
+            class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+        <div>
+          <label for="dob" class="block font-medium mb-1">Date of Birth</label>
+          <input type="date" id="dob" required
+            class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+        <div>
+          <label for="course" class="block font-medium mb-1">Course</label>
+          <select id="course" required
+            class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+            <option value="">Select a course</option>
+            <option>BSc CS</option>
+            <option>BCA</option>
+            <option>BA English</option>
+            <option>BCom</option>
+            <option>BBA</option>
+          </select>
+        </div>
+        <div>
+          <label for="photo" class="block font-medium mb-1">Student Photo</label>
+          <input type="file" id="photo" accept="image/*"
+            class="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400" />
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block font-medium mb-1">Gender</label>
+          <div class="flex gap-6">
+            <label class="flex items-center gap-2">
+              <input type="radio" name="gender" value="Male" required class="accent-blue-600" /> Male
+            </label>
+            <label class="flex items-center gap-2">
+              <input type="radio" name="gender" value="Female" class="accent-blue-600" /> Female
+            </label>
+            <label class="flex items-center gap-2">
+              <input type="radio" name="gender" value="Other" class="accent-blue-600" /> Other
+            </label>
+          </div>
+        </div>
+        <div class="sm:col-span-2">
+          <button type="submit"
+            class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition duration-200">
+            Add Student
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Table Section -->
+    <div class="bg-white p-6 rounded-xl shadow-md">
+      <!-- Export Button -->
+      <div class="flex justify-between items-center mb-3">
+        <h2 class="text-xl font-semibold text-gray-800 mb-3">📋 Student List</h2>
+        <button onclick="exportToCSV()"
+          class="bg-green-600 hover:bg-green-600 text-white py-2 px-3 rounded transition duration-200">
+          ⬇️ Export to CSV
+        </button>
+    
+      
+        </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border border-gray-300">
+          <thead>
+            <tr class="bg-blue-200">
+              <th class="py-2 px-4 border">#</th>
+              <th class="py-2 px-4 border">Photo</th>
+              <th class="py-2 px-4 border">Name</th>
+              <th class="py-2 px-4 border">Age</th>
+              <th class="py-2 px-4 border">DOB</th>
+              <th class="py-2 px-4 border">Email</th>
+              <th class="py-2 px-4 border">Course</th>
+              <th class="py-2 px-4 border">Gender</th>
+              <th class="py-2 px-4 border">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="studentTable" class="text-gray-700">
+            <!-- JavaScript will insert rows -->
+          </tbody>
+        </table>
+      </div>
+
+      
+    </div>
+  </div>
+
+  <script>
+    let students = [];
+    let editIndex = -1;
+
+    const form = document.getElementById("studentForm");
+    const table = document.getElementById("studentTable");
+    const searchInput = document.getElementById("searchInput");
+
+    function getGender() {
+      const radios = document.getElementsByName("gender");
+      for (let r of radios) {
+        if (r.checked) return r.value;
+      }
+      return "";
+    }
+
+    function setGender(value) {
+      const radios = document.getElementsByName("gender");
+      for (let r of radios) {
+        r.checked = (r.value === value);
+      }
+    }
+
+    function renderTable(data = students) {
+      table.innerHTML = "";
+      data.forEach((student, index) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td class="border px-4 py-2">${index + 1}</td>
+          <td class="border px-4 py-2"><img src="${student.photo}" class="w-12 h-12 object-cover rounded-full" /></td>
+          <td class="border px-4 py-2">${student.name}</td>
+          <td class="border px-4 py-2">${student.age}</td>
+          <td class="border px-4 py-2">${student.dob}</td>
+          <td class="border px-4 py-2">${student.email}</td>
+          <td class="border px-4 py-2">${student.course}</td>
+          <td class="border px-4 py-2">${student.gender}</td>
+          <td class="border px-4 py-2">
+            <button onclick="editStudent(${index})" class="text-yellow-600 hover:underline mr-2">Edit</button>
+            <button onclick="deleteStudent(${index})" class="text-red-600 hover:underline">Delete</button>
+          </td>
+        `;
+        table.appendChild(row);
+      });
+    }
+
+    function editStudent(index) {
+      const student = students[index];
+      document.getElementById("name").value = student.name;
+      document.getElementById("age").value = student.age;
+      document.getElementById("email").value = student.email;
+      document.getElementById("dob").value = student.dob;
+      document.getElementById("course").value = student.course;
+      setGender(student.gender);
+      editIndex = index;
+    }
+
+    function deleteStudent(index) {
+      students.splice(index, 1);
+      renderTable();
+    }
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const name = document.getElementById("name").value;
+      const age = document.getElementById("age").value;
+      const email = document.getElementById("email").value;
+      const dob = document.getElementById("dob").value;
+      const course = document.getElementById("course").value;
+      const gender = getGender();
+      const photoInput = document.getElementById("photo");
+
+      const reader = new FileReader();
+      if (photoInput.files.length > 0) {
+        reader.onload = function () {
+          const photo = reader.result;
+          saveStudent({ name, age, dob, email, course, gender, photo });
+        };
+        reader.readAsDataURL(photoInput.files[0]);
+      } else {
+        const defaultPhoto = "https://via.placeholder.com/50";
+        saveStudent({ name, age, dob, email, course, gender, photo: defaultPhoto });
+      }
+    });
+
+    function saveStudent(student) {
+      if (editIndex >= 0) {
+        students[editIndex] = student;
+        editIndex = -1;
+      } else {
+        students.push(student);
+      }
+      form.reset();
+      renderTable();
+    }
+
+    searchInput.addEventListener("input", () => {
+      const value = searchInput.value.toLowerCase();
+      const filtered = students.filter(s =>
+        s.name.toLowerCase().includes(value) ||
+        s.course.toLowerCase().includes(value) ||
+        s.gender.toLowerCase().includes(value) ||
+        s.dob.toLowerCase().includes(value)
+      );
+      renderTable(filtered);
+    });
+
+    function exportToCSV() {
+      if (students.length === 0) {
+        alert("No student data to export.");
+        return;
+      }
+
+      const headers = ["Name", "Age", "DOB", "Email", "Course", "Gender"];
+      const rows = students.map(student => [
+        student.name,
+        student.age,
+        student.dob,
+        student.email,
+        student.course,
+        student.gender
+      ]);
+
+      let csvContent = "data:text/csv;charset=utf-8,"
+        + headers.join(",") + "\n"
+        + rows.map(e => e.map(field => `"${field}"`).join(",")).join("\n");
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "student_data.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+
+</body>
+</html>
+
+
+
+
